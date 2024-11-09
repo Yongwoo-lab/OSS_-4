@@ -1,43 +1,247 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생관리시스템</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<style>
+    .frame {
+        margin: 20px;
+    }
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    .button {
+        width: 13%;
+    }
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+    #div_member table {
+        width: 100%;
+        margin-top: 20px;
+    }
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+    #div_member th,
+    #div_member td {
+        border: 1px solid #000;
+        padding: 15px;
+        text-align: left;
+    }
+
+    #div_member th {
+        background-color: #f2f2f2;
+    }
+
+    #div_member td {
+        height: 40px;
+    }
+</style>
+
+<body>
+    <div class="frame">
+        <h1>학생관리시스템</h1>
+        <button class="button" onclick="getDataFromJSONFile()">데이터 목록보기</button>
+        <button class="button" data-toggle="modal" data-target="#addModal">데이터 추가</button>
+    </div>
+
+    <div id="div_member"></div>
+
+    <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">데이터 추가</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    NAME: <input type="text" id="addName" class="form-control" />
+                    HOMETOWN: <input type="text" id="addHometown" class="form-control" />
+                    MAJOR: <input type="text" id="addMajor" class="form-control" />
+                    EMAIL: <input type="text" id="addEmail" class="form-control" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="createDataToJSONFile()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">데이터 수정</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ID: <input type="text" id="editId" class="form-control" readonly />
+                    NAME: <input type="text" id="editName" class="form-control" />
+                    HOMETOWN: <input type="text" id="editHometown" class="form-control" />
+                    MAJOR: <input type="text" id="editMajor" class="form-control" />
+                    EMAIL: <input type="text" id="editEmail" class="form-control" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateDataToJSONFile()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getDataFromJSONFile() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://672b59cd976a834dd026b7d6.mockapi.io/member");
+            xhr.setRequestHeader("content-type", "application/json");
+            xhr.send();
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    $("#div_member").html(`
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Major</th>
+                                    <th>Hometown</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="member_table_body"></tbody>
+                        </table>
+                    `);
+
+                    let members = JSON.parse(xhr.response);
+                    members.forEach((item) => {
+                        $("#member_table_body").append(`
+                            <tr>
+                                <td>${item.id}</td>
+                                <td>${item.name}</td>
+                                <td>${item.email}</td>
+                                <td>${item.major}</td>
+                                <td>${item.hometown}</td>
+                                <td>
+                                    <button onclick="loadDataForEdit('${item.id}')" data-toggle="modal" data-target="#editModal">수정</button>
+                                    <button onclick="deleteData('${item.id}')">삭제</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+            }
+        }
+
+        function createDataToJSONFile() {
+            const name = $("#addName").val();
+            const hometown = $("#addHometown").val();
+            const major = $("#addMajor").val();
+            const email = $("#addEmail").val();
+
+            if (!name || !hometown || !major || !email) {
+                alert("모든 필드를 입력해 주세요.");
+                return;
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "https://672b59cd976a834dd026b7d6.mockapi.io/member");
+            xhr.setRequestHeader("content-type", "application/json; charset=UTF-8");
+
+            let data = { name, hometown, major, email };
+
+            xhr.send(JSON.stringify(data));
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    alert("등록 성공!");
+                    $('#addModal').modal('hide');
+                    getDataFromJSONFile();
+                    clearInputFields();
+                } else {
+                    console.error("등록 실패:", xhr.status, xhr.statusText);
+                }
+            }
+        }
+
+        function loadDataForEdit(id) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", `https://672b59cd976a834dd026b7d6.mockapi.io/member/${id}`);
+            xhr.setRequestHeader("content-type", "application/json");
+            xhr.send();
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    let member = JSON.parse(xhr.response);
+                    $("#editId").val(member.id);
+                    $("#editName").val(member.name);
+                    $("#editHometown").val(member.hometown);
+                    $("#editMajor").val(member.major);
+                    $("#editEmail").val(member.email);
+                } else {
+                    console.error("데이터 로드 실패:", xhr.status, xhr.statusText);
+                }
+            }
+        }
+
+        function updateDataToJSONFile() {
+            const id = $("#editId").val();
+            if (!id) {
+                alert("수정할 데이터를 선택해주세요.");
+                return;
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", "https://672b59cd976a834dd026b7d6.mockapi.io/member/" + id);
+            xhr.setRequestHeader("content-type", "application/json; charset=UTF-8");
+
+            let data = {
+                name: $("#editName").val(),
+                hometown: $("#editHometown").val(),
+                major: $("#editMajor").val(),
+                email: $("#editEmail").val()
+            };
+
+            xhr.send(JSON.stringify(data));
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    alert("수정 성공!");
+                    $('#editModal').modal('hide');
+                    getDataFromJSONFile();
+                    clearInputFields();
+                } else {
+                    console.error("수정 실패:", xhr.status, xhr.statusText);
+                }
+            }
+        }
+
+        function deleteData(id) {
+            if (!confirm("정말 삭제하시겠습니까?")) return;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("DELETE", "https://672b59cd976a834dd026b7d6.mockapi.io/member/" + id);
+            xhr.setRequestHeader("content-type", "application/json");
+            xhr.send();
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    alert("삭제 성공!");
+                    getDataFromJSONFile();
+                } else {
+                    alert("삭제 실패!");
+                    console.error("삭제 실패:", xhr.status, xhr.statusText);
+                }
+            }
+        }
+
+        function clearInputFields() {
+            $("#addName, #addHometown, #addMajor, #addEmail").val("");
+            $("#editId, #editName, #editHometown, #editMajor, #editEmail").val("");
+        }
+    </script>
+</body>
 </html>
