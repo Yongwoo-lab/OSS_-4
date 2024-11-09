@@ -13,6 +13,7 @@
 <style>
     .frame {
         margin: 20px;
+        background-color: rgb(201, 242, 233);
     }
 
     .button {
@@ -45,6 +46,7 @@
         <h1>학생관리시스템</h1>
         <button class="button" onclick="getDataFromJSONFile()">데이터 목록보기</button>
         <button class="button" data-toggle="modal" data-target="#addModal">데이터 추가</button>
+        <input type="text" id="searchInput" placeholder="학생 이름 검색" onkeyup="searchData()" class="form-control mt-3" />
     </div>
 
     <div id="div_member"></div>
@@ -125,7 +127,7 @@
                         $("#member_table_body").append(`
                             <tr>
                                 <td>${item.id}</td>
-                                <td>${item.name}</td>
+                                <td class="name">${item.name}</td>
                                 <td>${item.email}</td>
                                 <td>${item.major}</td>
                                 <td>${item.hometown}</td>
@@ -138,6 +140,13 @@
                     });
                 }
             }
+        }
+
+        function searchData() {
+            const searchValue = $("#searchInput").val().toLowerCase();
+            $("#member_table_body tr").filter(function() {
+                $(this).toggle($(this).find(".name").text().toLowerCase().indexOf(searchValue) > -1);
+            });
         }
 
         function createDataToJSONFile() {
